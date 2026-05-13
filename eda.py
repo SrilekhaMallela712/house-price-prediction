@@ -81,3 +81,93 @@ plt.ylabel("SalePrice")
 plt.title("GrLivArea vs SalePrice")
 
 plt.show()
+import numpy as np
+
+# =====================================
+# HANDLING MISSING VALUES
+# =====================================
+
+# Fill categorical missing values
+
+categorical_cols = [
+    "PoolQC",
+    "MiscFeature",
+    "Alley",
+    "Fence",
+    "FireplaceQu"
+]
+
+for col in categorical_cols:
+    df[col] = df[col].fillna("None")
+
+# Fill numerical missing values using median
+
+numerical_cols = [
+    "LotFrontage",
+    "MasVnrArea",
+    "GarageYrBlt"
+]
+
+for col in numerical_cols:
+    df[col] = df[col].fillna(df[col].median())
+
+print("\n===== MISSING VALUES AFTER HANDLING =====\n")
+
+print(df.isnull().sum().sort_values(ascending=False).head(10))
+
+# =====================================
+# FEATURE ENGINEERING
+# =====================================
+
+# Total square feet
+
+df["TotalSF"] = df["TotalBsmtSF"] + df["GrLivArea"]
+
+# Total bathrooms
+
+df["TotalBathrooms"] = (
+    df["FullBath"] +
+    (0.5 * df["HalfBath"]) +
+    df["BsmtFullBath"] +
+    (0.5 * df["BsmtHalfBath"])
+)
+
+# House age
+
+df["HouseAge"] = df["YrSold"] - df["YearBuilt"]
+
+print("\n===== NEW FEATURES =====\n")
+
+print(df[["TotalSF", "TotalBathrooms", "HouseAge"]].head())
+
+# =====================================
+# LOG TRANSFORMATION
+# =====================================
+
+df["SalePriceLog"] = np.log1p(df["SalePrice"])
+
+print("\n===== LOG TRANSFORMATION =====\n")
+
+print(df[["SalePrice", "SalePriceLog"]].head())
+
+# =====================================
+# OUTLIER DETECTION
+# =====================================
+
+plt.figure(figsize=(8,5))
+
+plt.scatter(df["GrLivArea"], df["SalePrice"])
+
+plt.xlabel("Ground Living Area")
+plt.ylabel("Sale Price")
+plt.title("Outlier Detection")
+
+plt.show()
+
+# Remove extreme outliers
+
+df = df[df["GrLivArea"] < 4500]
+
+print("\n===== DATASET SHAPE AFTER OUTLIER REMOVAL =====\n")
+
+print(df.shape)
