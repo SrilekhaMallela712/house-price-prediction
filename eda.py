@@ -171,3 +171,106 @@ df = df[df["GrLivArea"] < 4500]
 print("\n===== DATASET SHAPE AFTER OUTLIER REMOVAL =====\n")
 
 print(df.shape)
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import mean_squared_error, r2_score
+from sklearn.linear_model import LinearRegression
+from sklearn.ensemble import RandomForestRegressor
+from xgboost import XGBRegressor
+
+# =====================================
+# SELECT FEATURES
+# =====================================
+
+features = [
+    "OverallQual",
+    "GrLivArea",
+    "GarageCars",
+    "TotalBsmtSF",
+    "FullBath",
+    "YearBuilt",
+    "TotalSF",
+    "TotalBathrooms",
+    "HouseAge"
+]
+
+X = df[features]
+
+y = df["SalePriceLog"]
+
+# =====================================
+# TRAIN TEST SPLIT
+# =====================================
+
+X_train, X_test, y_train, y_test = train_test_split(
+    X,
+    y,
+    test_size=0.2,
+    random_state=42
+)
+
+print("\n===== TRAIN TEST SPLIT =====\n")
+
+print("X_train shape:", X_train.shape)
+print("X_test shape:", X_test.shape)
+
+# =====================================
+# LINEAR REGRESSION
+# =====================================
+
+lr_model = LinearRegression()
+
+lr_model.fit(X_train, y_train)
+
+lr_pred = lr_model.predict(X_test)
+
+lr_rmse = mean_squared_error(y_test, lr_pred) ** 0.5
+lr_r2 = r2_score(y_test, lr_pred)
+
+print("\n===== LINEAR REGRESSION =====\n")
+
+print("RMSE:", lr_rmse)
+print("R2 Score:", lr_r2)
+
+# =====================================
+# RANDOM FOREST
+# =====================================
+
+rf_model = RandomForestRegressor(
+    n_estimators=100,
+    random_state=42
+)
+
+rf_model.fit(X_train, y_train)
+
+rf_pred = rf_model.predict(X_test)
+
+rf_rmse = mean_squared_error(y_test, rf_pred) ** 0.5
+rf_r2 = r2_score(y_test, rf_pred)
+
+print("\n===== RANDOM FOREST =====\n")
+
+print("RMSE:", rf_rmse)
+print("R2 Score:", rf_r2)
+
+# =====================================
+# XGBOOST REGRESSOR
+# =====================================
+
+xgb_model = XGBRegressor(
+    n_estimators=200,
+    learning_rate=0.05,
+    max_depth=4,
+    random_state=42
+)
+
+xgb_model.fit(X_train, y_train)
+
+xgb_pred = xgb_model.predict(X_test)
+
+xgb_rmse = mean_squared_error(y_test, xgb_pred) ** 0.5
+xgb_r2 = r2_score(y_test, xgb_pred)
+
+print("\n===== XGBOOST =====\n")
+
+print("RMSE:", xgb_rmse)
+print("R2 Score:", xgb_r2)
