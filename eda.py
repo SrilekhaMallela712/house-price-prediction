@@ -21,7 +21,9 @@ print(df.shape)
 print("\n===== MISSING VALUES =====\n")
 
 missing_values = df.isnull().sum()
+
 missing_values = missing_values[missing_values > 0]
+
 missing_values = missing_values.sort_values(ascending=False)
 
 print(missing_values.head(15))
@@ -56,8 +58,6 @@ print(sale_corr.head(15))
 # HANDLE MISSING VALUES
 # =====================================
 
-# Fill categorical columns
-
 categorical_cols = [
     "PoolQC",
     "MiscFeature",
@@ -69,8 +69,6 @@ categorical_cols = [
 for col in categorical_cols:
     df[col] = df[col].fillna("None")
 
-# Fill numerical columns
-
 numerical_cols = [
     "LotFrontage",
     "MasVnrArea",
@@ -80,9 +78,9 @@ numerical_cols = [
 for col in numerical_cols:
     df[col] = df[col].fillna(df[col].median())
 
-# Fill remaining numerical missing values
-
-numeric_columns = df.select_dtypes(include=["int64", "float64"]).columns
+numeric_columns = df.select_dtypes(
+    include=["int64", "float64"]
+).columns
 
 for col in numeric_columns:
     df[col] = df[col].fillna(df[col].median())
@@ -95,7 +93,10 @@ print(df.isnull().sum().sum())
 # FEATURE ENGINEERING
 # =====================================
 
-df["TotalSF"] = df["TotalBsmtSF"] + df["GrLivArea"]
+df["TotalSF"] = (
+    df["TotalBsmtSF"] +
+    df["GrLivArea"]
+)
 
 df["TotalBathrooms"] = (
     df["FullBath"] +
@@ -104,11 +105,22 @@ df["TotalBathrooms"] = (
     (0.5 * df["BsmtHalfBath"])
 )
 
-df["HouseAge"] = df["YrSold"] - df["YearBuilt"]
+df["HouseAge"] = (
+    df["YrSold"] -
+    df["YearBuilt"]
+)
 
 print("\n===== NEW FEATURES CREATED =====\n")
 
-print(df[["TotalSF", "TotalBathrooms", "HouseAge"]].head())
+print(
+    df[
+        [
+            "TotalSF",
+            "TotalBathrooms",
+            "HouseAge"
+        ]
+    ].head()
+)
 
 # =====================================
 # LOG TRANSFORMATION
@@ -118,7 +130,14 @@ df["SalePriceLog"] = np.log1p(df["SalePrice"])
 
 print("\n===== LOG TRANSFORMATION DONE =====\n")
 
-print(df[["SalePrice", "SalePriceLog"]].head())
+print(
+    df[
+        [
+            "SalePrice",
+            "SalePriceLog"
+        ]
+    ].head()
+)
 
 # =====================================
 # OUTLIER DETECTION
@@ -126,7 +145,10 @@ print(df[["SalePrice", "SalePriceLog"]].head())
 
 plt.figure(figsize=(8,5))
 
-plt.scatter(df["GrLivArea"], df["SalePrice"])
+plt.scatter(
+    df["GrLivArea"],
+    df["SalePrice"]
+)
 
 plt.xlabel("GrLivArea")
 plt.ylabel("SalePrice")
@@ -134,7 +156,7 @@ plt.title("Outlier Detection")
 
 plt.show()
 
-# Remove extreme outliers
+# Remove outliers
 
 df = df[df["GrLivArea"] < 4500]
 
@@ -147,14 +169,15 @@ print(df.shape)
 # =====================================
 
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import mean_squared_error, r2_score
+from sklearn.metrics import mean_squared_error
+from sklearn.metrics import r2_score
 from sklearn.linear_model import LinearRegression
 from sklearn.ensemble import RandomForestRegressor
+
 from xgboost import XGBRegressor
 
-# Selected features
-
 features = [
+
     "OverallQual",
     "GrLivArea",
     "GarageCars",
@@ -164,19 +187,24 @@ features = [
     "TotalSF",
     "TotalBathrooms",
     "HouseAge"
+
 ]
 
 X = df[features]
 
 y = df["SalePriceLog"]
 
-# Train test split
+# =====================================
+# TRAIN TEST SPLIT
+# =====================================
 
 X_train, X_test, y_train, y_test = train_test_split(
+
     X,
     y,
     test_size=0.2,
     random_state=42
+
 )
 
 print("\n===== TRAIN TEST SPLIT =====\n")
@@ -199,7 +227,10 @@ lr_rmse = mean_squared_error(
     lr_pred
 ) ** 0.5
 
-lr_r2 = r2_score(y_test, lr_pred)
+lr_r2 = r2_score(
+    y_test,
+    lr_pred
+)
 
 print("\n===== LINEAR REGRESSION =====\n")
 
@@ -211,8 +242,10 @@ print("R2 Score:", lr_r2)
 # =====================================
 
 rf_model = RandomForestRegressor(
+
     n_estimators=100,
     random_state=42
+
 )
 
 rf_model.fit(X_train, y_train)
@@ -224,7 +257,10 @@ rf_rmse = mean_squared_error(
     rf_pred
 ) ** 0.5
 
-rf_r2 = r2_score(y_test, rf_pred)
+rf_r2 = r2_score(
+    y_test,
+    rf_pred
+)
 
 print("\n===== RANDOM FOREST =====\n")
 
@@ -236,10 +272,12 @@ print("R2 Score:", rf_r2)
 # =====================================
 
 xgb_model = XGBRegressor(
+
     n_estimators=200,
     learning_rate=0.05,
     max_depth=4,
     random_state=42
+
 )
 
 xgb_model.fit(X_train, y_train)
@@ -251,7 +289,10 @@ xgb_rmse = mean_squared_error(
     xgb_pred
 ) ** 0.5
 
-xgb_r2 = r2_score(y_test, xgb_pred)
+xgb_r2 = r2_score(
+    y_test,
+    xgb_pred
+)
 
 print("\n===== XGBOOST =====\n")
 
@@ -316,9 +357,14 @@ def objective(trial):
 
 print("\n===== RUNNING OPTUNA =====\n")
 
-study = optuna.create_study(direction="minimize")
+study = optuna.create_study(
+    direction="minimize"
+)
 
-study.optimize(objective, n_trials=10)
+study.optimize(
+    objective,
+    n_trials=10
+)
 
 print("\n===== BEST PARAMETERS =====\n")
 
@@ -333,8 +379,10 @@ print(study.best_value)
 # =====================================
 
 best_model = XGBRegressor(
+
     **study.best_params,
     random_state=42
+
 )
 
 best_model.fit(X_train, y_train)
@@ -355,3 +403,54 @@ print("\n===== TUNED XGBOOST RESULTS =====\n")
 
 print("RMSE:", best_rmse)
 print("R2 Score:", best_r2)
+
+# =====================================
+# SHAP EXPLAINABILITY
+# =====================================
+
+# =====================================
+# SHAP EXPLAINABILITY
+# =====================================
+
+# =====================================
+# SHAP EXPLAINABILITY
+# =====================================
+
+import shap
+
+print("\n===== SHAP ANALYSIS STARTED =====\n")
+
+# Use Random Forest Model
+
+explainer = shap.TreeExplainer(rf_model)
+
+# Generate SHAP values
+
+shap_values = explainer.shap_values(X_test)
+
+# =====================================
+# FEATURE IMPORTANCE BAR PLOT
+# =====================================
+
+print("\n===== FEATURE IMPORTANCE =====\n")
+
+shap.summary_plot(
+    shap_values,
+    X_test,
+    plot_type="bar"
+)
+
+plt.show()
+
+# =====================================
+# SHAP SUMMARY PLOT
+# =====================================
+
+print("\n===== SHAP SUMMARY PLOT =====\n")
+
+shap.summary_plot(
+    shap_values,
+    X_test
+)
+
+plt.show()
