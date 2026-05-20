@@ -1,0 +1,8 @@
+streamlit
+pandas
+numpy==1.26.4
+scikit-learn
+xgboost
+matplotlib
+optuna
+shap==0.44.1
